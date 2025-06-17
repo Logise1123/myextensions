@@ -2,7 +2,7 @@
     'use strict';
     if (!Scratch.extensions.unsandboxed) throw new Error("This extension must run unsandboxed");
 
-    const API_URL = "https://text.pollinations.ai/openai";
+    const API_URL = "https://text.pollinations.ai/openai?token=WnMRkRAWENT_Fygi";
     const MODEL = "openai-large";
 
     class PangAI {
