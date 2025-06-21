@@ -3,7 +3,7 @@
     if (!Scratch.extensions.unsandboxed) throw new Error("This extension must run unsandboxed");
 
     const API_URL = "https://text.pollinations.ai/openai?token=WnMRkRAWENT_Fygi"; // o tu API real
-    const MODEL = "openai";
+    const MODEL = "openai-large";
 
     class PangAI {
         constructor() {
@@ -72,8 +72,7 @@
             }
             const body = {
                 model: MODEL,
-                messages: [{ role: 'user', content }],
-                max_tokens: 300
+                messages: [{ role: 'user', content }]
             };
             this.nextImage = null;
 
@@ -101,8 +100,7 @@
 
             const body = {
                 model: MODEL,
-                messages: conversation,
-                max_tokens: 300
+                messages: conversation
             };
             this.nextImage = null;
 
