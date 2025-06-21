@@ -2,8 +2,8 @@
     'use strict';
     if (!Scratch.extensions.unsandboxed) throw new Error("This extension must run unsandboxed");
 
-    const API_URL = "https://text.pollinations.ai/openai?token=WnMRkRAWENT_Fygi"; // Cambia si usas OpenAI directo
-    const MODEL = "openai-large";
+    const API_URL = "https://text.pollinations.ai/openai?token=WnMRkRAWENT_Fygi"; // o tu API real
+    const MODEL = "openai";
 
     class PangAI {
         constructor() {
@@ -16,32 +16,64 @@
                 id: 'pangai',
                 name: 'PangAI',
                 color1: '#5588ff',
-                menuIconURI: '',
                 blocks: [
                     { blockType: Scratch.BlockType.LABEL, text: 'Message Management' },
+                    { opcode: 'get_prompt', blockType: Scratch.BlockType.REPORTER, text: 'Get prompt [TYPE]', arguments: { TYPE: { type: Scratch.ArgumentType.STRING, menu: 'promptMenu' } } },
                     { opcode: 'generate_text_nocontext', blockType: Scratch.BlockType.REPORTER, text: 'Generate from text (No Context): [PROMPT]', arguments: { PROMPT: { type: Scratch.ArgumentType.STRING } } },
                     { opcode: 'send_text_to_chat', blockType: Scratch.BlockType.REPORTER, text: 'Send text [PROMPT] to [chatID]', arguments: { PROMPT: { type: Scratch.ArgumentType.STRING }, chatID: { type: Scratch.ArgumentType.STRING } } },
                     { opcode: 'attach_image', blockType: Scratch.BlockType.COMMAND, text: 'Attach Image [URL] to next message', arguments: { URL: { type: Scratch.ArgumentType.STRING } } },
+                    { opcode: 'inform_chat', blockType: Scratch.BlockType.COMMAND, text: 'Inform [chatID] that [inform]', arguments: { chatID: { type: Scratch.ArgumentType.STRING }, inform: { type: Scratch.ArgumentType.STRING } } },
+                    { opcode: 'generate_image', blockType: Scratch.BlockType.REPORTER, text: 'Generate Image [PROMPT]', arguments: { PROMPT: { type: Scratch.ArgumentType.STRING } } },
+                    { blockType: Scratch.BlockType.LABEL, text: 'Chatbot Management' },
                     { opcode: 'create_chatbot', blockType: Scratch.BlockType.COMMAND, text: 'Create chatbot named [chatID]', arguments: { chatID: { type: Scratch.ArgumentType.STRING } } },
                     { opcode: 'delete_chatbot', blockType: Scratch.BlockType.COMMAND, text: 'Delete chatbot [chatID]', arguments: { chatID: { type: Scratch.ArgumentType.STRING } } },
                     { opcode: 'reset_chat', blockType: Scratch.BlockType.COMMAND, text: 'Reset chat history of [chatID]', arguments: { chatID: { type: Scratch.ArgumentType.STRING } } },
                     { opcode: 'get_chat_history', blockType: Scratch.BlockType.REPORTER, text: 'Chat history of [chatID] as Array', arguments: { chatID: { type: Scratch.ArgumentType.STRING } } },
+                    { opcode: 'import_history', blockType: Scratch.BlockType.COMMAND, text: 'Import chat history from [json] as [chatID]', arguments: { json: { type: Scratch.ArgumentType.STRING }, chatID: { type: Scratch.ArgumentType.STRING } } },
+                    { opcode: 'import_chats_merge', blockType: Scratch.BlockType.COMMAND, text: 'Import chats from [json] and [merge]', arguments: { json: { type: Scratch.ArgumentType.STRING }, merge: { type: Scratch.ArgumentType.STRING, menu: 'mergeTypes' } } },
                     { opcode: 'all_chats', blockType: Scratch.BlockType.REPORTER, text: 'All chats as Arrays' },
                     { opcode: 'active_chats', blockType: Scratch.BlockType.REPORTER, text: 'Currently Active chats' }
-                ]
+                ],
+                menus: {
+                    promptMenu: [
+                        'Gibberish (probably does not work) By: u/Fkquaps',
+                        'PenguinBot (Pre Circlelabs) By: JeremyGamer13',
+                        'Stand Up Comedian (Character) By: devisasari',
+                        'Lunatic (Character) By: devisasari',
+                        'Lua Console From awesomegptprompts.com',
+                        'Advertiser (Character) By: devisasari',
+                        'Minecraft Commander (Idea from Greedy Allay)'
+                    ],
+                    mergeTypes: [
+                        { text: 'Merge/Update existing chats', value: 'Merge/Update existing chats' },
+                        { text: 'Remove all chatbots and import', value: 'Remove all chatbots and import' }
+                    ]
+                }
             };
         }
 
+        get_prompt({ TYPE }) {
+            const prompts = {
+                'Gibberish (probably does not work) By: u/Fkquaps': 'From now on you will respond everything replacing every letter...',
+                'PenguinBot (Pre Circlelabs) By: JeremyGamer13': 'You are PenguinBot. You live in Antarctica ...',
+                'Stand Up Comedian (Character) By: devisasari': 'I want you to act as a stand-up comedian...',
+                'Lunatic (Character) By: devisasari': 'I want you to act as a lunatic. The lunatic\'s sentences are meaningless...',
+                'Lua Console From awesomegptprompts.com': 'I want you to act as a lua console...',
+                'Advertiser (Character) By: devisasari': 'I want you to act as an advertiser...',
+                'Minecraft Commander (Idea from Greedy Allay)': 'I want you to act as a Minecraft AI command creator...'
+            };
+            return prompts[TYPE] || '';
+        }
+
         async generate_text_nocontext({ PROMPT }) {
-            const content = [
-                { type: 'text', text: PROMPT }
-            ];
+            const content = [{ type: 'text', text: PROMPT }];
             if (this.nextImage) {
                 content.push({ type: 'image_url', image_url: { url: this.nextImage } });
             }
             const body = {
                 model: MODEL,
-                messages: [{ role: 'user', content }]
+                messages: [{ role: 'user', content }],
+                max_tokens: 300
             };
             this.nextImage = null;
 
@@ -57,25 +89,20 @@
 
         async send_text_to_chat({ PROMPT, chatID }) {
             if (!this.histories[chatID]) this.histories[chatID] = [];
-            this.histories[chatID].push({ role: 'user', content: PROMPT });
+            this.histories[chatID].push({ role: 'user', content: PROMPT, image: this.nextImage });
 
             const conversation = this.histories[chatID].map(msg => {
-                const content = [ { type: 'text', text: msg.content } ];
+                const content = [{ type: 'text', text: msg.content }];
                 if (msg.image) {
                     content.push({ type: 'image_url', image_url: { url: msg.image } });
                 }
                 return { role: msg.role, content };
             });
 
-            const currentContent = [ { type: 'text', text: PROMPT } ];
-            if (this.nextImage) {
-                currentContent.push({ type: 'image_url', image_url: { url: this.nextImage } });
-            }
-            conversation[conversation.length - 1] = { role: 'user', content: currentContent };
-
             const body = {
                 model: MODEL,
-                messages: conversation
+                messages: conversation,
+                max_tokens: 300
             };
             this.nextImage = null;
 
@@ -95,6 +122,11 @@
             this.nextImage = URL;
         }
 
+        inform_chat({ chatID, inform }) {
+            if (!this.histories[chatID]) this.histories[chatID] = [];
+            this.histories[chatID].push({ role: 'system', content: inform });
+        }
+
         create_chatbot({ chatID }) {
             if (!this.histories[chatID]) this.histories[chatID] = [];
         }
@@ -111,12 +143,39 @@
             return JSON.stringify(this.histories[chatID] || []);
         }
 
+        import_history({ json, chatID }) {
+            try {
+                this.histories[chatID] = JSON.parse(json);
+            } catch (e) {
+                console.error("Invalid JSON for chat history.");
+            }
+        }
+
+        import_chats_merge({ json, merge }) {
+            try {
+                const newChats = JSON.parse(json);
+                if (merge === 'Remove all chatbots and import') {
+                    this.histories = newChats;
+                } else {
+                    for (const id in newChats) {
+                        this.histories[id] = newChats[id];
+                    }
+                }
+            } catch (e) {
+                console.error("Invalid JSON for chats.");
+            }
+        }
+
         all_chats() {
             return JSON.stringify(this.histories);
         }
 
         active_chats() {
             return Object.keys(this.histories);
+        }
+
+        generate_image({ PROMPT }) {
+            return `https://image.pollinations.ai/prompt/${encodeURIComponent(PROMPT)}?height=1000&width=1000&enhance=true&nologo=true`;
         }
     }
 
