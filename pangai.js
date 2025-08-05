@@ -7,9 +7,7 @@
     class PangAI {
         constructor() {
             this.histories = {};
-            // El modelo por defecto. Se puede cambiar con el nuevo bloque.
             this.model = 'llama-3.1-8b-instruct-fast';
-            // this.nextImage almacenará la URL de la imagen que se adjuntará.
             this.nextImage = null;
         }
 
@@ -39,7 +37,7 @@
                         text: 'current model' 
                     },
                     { blockType: Scratch.BlockType.LABEL, text: 'Model Status:' },
-                    { blockType: Scratch.BlockType.LABEL, text: 'https://pangaicheck.netlify.app/' },
+                    { blockType: Scratch.BlockType.LABEL, text: 'https://discord.gg/d2GzE9WZJR' },
                     { blockType: Scratch.BlockType.LABEL, text: 'Message Management' },
                     { opcode: 'get_prompt', blockType: Scratch.BlockType.REPORTER, text: 'Get prompt [TYPE]', arguments: { TYPE: { type: Scratch.ArgumentType.STRING, menu: 'promptMenu' } } },
                     { opcode: 'generate_text_nocontext', blockType: Scratch.BlockType.REPORTER, text: 'Generate from text (No Context): [PROMPT]', arguments: { PROMPT: { type: Scratch.ArgumentType.STRING } } },
