@@ -3,11 +3,12 @@
     if (!Scratch.extensions.unsandboxed) throw new Error("This extension must run unsandboxed");
 
     const API_URL = "https://freeai.logise1123.workers.dev/";
-    const MODEL = "openai-large";
 
     class PangAI {
         constructor() {
             this.histories = {};
+            // El modelo por defecto. Se puede cambiar con el nuevo bloque.
+            this.model = 'llama-3.1-8b-instruct-fast';
             // this.nextImage almacenará la URL de la imagen que se adjuntará.
             this.nextImage = null;
         }
@@ -19,6 +20,26 @@
                 color1: '#5588ff',
                 menuIconURI: '',
                 blocks: [
+                    { blockType: Scratch.BlockType.LABEL, text: 'Configuration' },
+                    { 
+                        opcode: 'set_model', 
+                        blockType: Scratch.BlockType.COMMAND, 
+                        text: 'Set model to [MODEL]', 
+                        arguments: { 
+                            MODEL: { 
+                                type: Scratch.ArgumentType.STRING, 
+                                menu: 'modelMenu',
+                                defaultValue: 'llama-3.1-8b-instruct-fast'
+                            } 
+                        } 
+                    },
+                    { 
+                        opcode: 'get_current_model', 
+                        blockType: Scratch.BlockType.REPORTER, 
+                        text: 'current model' 
+                    },
+                    { blockType: Scratch.BlockType.LABEL, text: 'Model Status:' },
+                    { blockType: Scratch.BlockType.LABEL, text: 'https://pangaicheck.netlify.app/' },
                     { blockType: Scratch.BlockType.LABEL, text: 'Message Management' },
                     { opcode: 'get_prompt', blockType: Scratch.BlockType.REPORTER, text: 'Get prompt [TYPE]', arguments: { TYPE: { type: Scratch.ArgumentType.STRING, menu: 'promptMenu' } } },
                     { opcode: 'generate_text_nocontext', blockType: Scratch.BlockType.REPORTER, text: 'Generate from text (No Context): [PROMPT]', arguments: { PROMPT: { type: Scratch.ArgumentType.STRING } } },
@@ -37,6 +58,58 @@
                     { opcode: 'active_chats', blockType: Scratch.BlockType.REPORTER, text: 'Currently Active chats' }
                 ],
                 menus: {
+                    modelMenu: [
+                        { text: 'LLaMA 4 Scout 17B (Meta)', value: 'llama-4-scout-17b-16e-instruct' },
+                        { text: 'LLaMA 3.3 70B FP8 (Meta)', value: 'llama-3.3-70b-instruct-fp8-fast' },
+                        { text: 'LLaMA 3.1 8B Fast (Meta)', value: 'llama-3.1-8b-instruct-fast' },
+                        { text: 'Gemma 3 12B (Google)', value: 'gemma-3-12b-it' },
+                        { text: 'Mistral Small 3.1 24B (MistralAI)', value: 'mistral-small-3.1-24b-instruct' },
+                        { text: 'QwQ 32B (Qwen)', value: 'qwq-32b' },
+                        { text: 'Qwen2.5 Coder 32B (Qwen)', value: 'qwen2.5-coder-32b-instruct' },
+                        { text: 'LLaMA Guard 3 8B (Meta)', value: 'llama-guard-3-8b' },
+                        { text: 'DeepSeek R1 Distill Qwen 32B', value: 'deepseek-r1-distill-qwen-32b' },
+                        { text: 'LLaMA 3.2 1B (Meta)', value: 'llama-3.2-1b-instruct' },
+                        { text: 'LLaMA 3.2 3B (Meta)', value: 'llama-3.2-3b-instruct' },
+                        { text: 'LLaMA 3.2 11B Vision (Meta)', value: 'llama-3.2-11b-vision-instruct' },
+                        { text: 'LLaMA 3.1 8B AWQ (Meta)', value: 'llama-3.1-8b-instruct-awq' },
+                        { text: 'LLaMA 3.1 8B FP8 (Meta)', value: 'llama-3.1-8b-instruct-fp8' },
+                        { text: 'LLaMA 3.1 8B (Meta)', value: 'llama-3.1-8b-instruct' },
+                        { text: 'Meta LLaMA 3 8B (Meta)', value: 'meta-llama-3-8b-instruct' },
+                        { text: 'LLaMA 3 8B AWQ (Meta)', value: 'llama-3-8b-instruct-awq' },
+                        { text: 'Cybertron 7B v2 (UNA)', value: 'una-cybertron-7b-v2-bf16' },
+                        { text: 'LLaMA 3 8B (Meta)', value: 'llama-3-8b-instruct' },
+                        { text: 'Mistral 7B Instruct v0.2', value: 'mistral-7b-instruct-v0.2' },
+                        { text: 'Gemma 7B IT LoRA (Google)', value: 'gemma-7b-it-lora' },
+                        { text: 'Gemma 2B IT LoRA (Google)', value: 'gemma-2b-it-lora' },
+                        { text: 'LLaMA 2 7B Chat HF LoRA', value: 'llama-2-7b-chat-hf-lora' },
+                        { text: 'Gemma 7B IT (Google)', value: 'gemma-7b-it' },
+                        { text: 'Starling LM 7B Beta (Nexusflow)', value: 'starling-lm-7b-beta' },
+                        { text: 'Hermes 2 Pro Mistral 7B', value: 'hermes-2-pro-mistral-7b' },
+                        { text: 'Mistral 7B Instruct v0.2 LoRA', value: 'mistral-7b-instruct-v0.2-lora' },
+                        { text: 'Qwen 1.5 1.8B Chat', value: 'qwen1.5-1.8b-chat' },
+                        { text: 'Phi-2 (Microsoft)', value: 'phi-2' },
+                        { text: 'TinyLLaMA 1.1B Chat v1.0', value: 'tinyllama-1.1b-chat-v1.0' },
+                        { text: 'Qwen 1.5 14B Chat AWQ', value: 'qwen1.5-14b-chat-awq' },
+                        { text: 'Qwen 1.5 7B Chat AWQ', value: 'qwen1.5-7b-chat-awq' },
+                        { text: 'Qwen 1.5 0.5B Chat', value: 'qwen1.5-0.5b-chat' },
+                        { text: 'DiscoLM German 7B v1 AWQ', value: 'discolm-german-7b-v1-awq' },
+                        { text: 'Falcon 7B Instruct', value: 'falcon-7b-instruct' },
+                        { text: 'OpenChat 3.5 0106', value: 'openchat-3.5-0106' },
+                        { text: 'SQLCoder 7B 2', value: 'sqlcoder-7b-2' },
+                        { text: 'DeepSeek Math 7B Instruct', value: 'deepseek-math-7b-instruct' },
+                        { text: 'DeepSeek Coder 6.7B Instruct AWQ', value: 'deepseek-coder-6.7b-instruct-awq' },
+                        { text: 'DeepSeek Coder 6.7B Base AWQ', value: 'deepseek-coder-6.7b-base-awq' },
+                        { text: 'LLaMAGuard 7B AWQ', value: 'llamaguard-7b-awq' },
+                        { text: 'Neural Chat 7B v3.1 AWQ', value: 'neural-chat-7b-v3-1-awq' },
+                        { text: 'OpenHermes 2.5 Mistral 7B AWQ', value: 'openhermes-2.5-mistral-7b-awq' },
+                        { text: 'LLaMA 2 13B Chat AWQ', value: 'llama-2-13b-chat-awq' },
+                        { text: 'Mistral 7B Instruct v0.1 AWQ', value: 'mistral-7b-instruct-v0.1-awq' },
+                        { text: 'Zephyr 7B Beta AWQ', value: 'zephyr-7b-beta-awq' },
+                        { text: 'LLaMA 2 7B Chat FP16', value: 'llama-2-7b-chat-fp16' },
+                        { text: 'Mistral 7B Instruct v0.1', value: 'mistral-7b-instruct-v0.1' },
+                        { text: 'LLaMA 2 7B Chat INT8', value: 'llama-2-7b-chat-int8' },
+                        { text: 'LLaMA 3.1 70B Instruct', value: 'llama-3.1-70b-instruct' }
+                    ],
                     promptMenu: [
                         'Gibberish (probably does not work) By: u/Fkquaps',
                         'PenguinBot (Pre Circlelabs) By: JeremyGamer13',
@@ -54,6 +127,15 @@
             };
         }
 
+        // --- Nuevas funciones para gestionar el modelo ---
+        set_model({ MODEL }) {
+            this.model = MODEL;
+        }
+
+        get_current_model() {
+            return this.model;
+        }
+        
         /**
          * Función auxiliar para procesar la imagen adjunta.
          * Obtiene la imagen de la URL, la convierte a un Data URL base64 y
@@ -118,11 +200,10 @@
         }
 
         async generate_text_nocontext({ PROMPT }) {
-            // Crea el mensaje del usuario, procesando la imagen si está adjunta.
             const userMessage = await this._processImage(PROMPT);
 
             const body = {
-                model: MODEL,
+                model: this.model, // Usa el modelo seleccionado
                 messages: [userMessage]
             };
 
@@ -139,12 +220,11 @@
         async send_text_to_chat({ PROMPT, chatID }) {
             if (!this.histories[chatID]) this.histories[chatID] = [];
 
-            // Crea el mensaje del usuario, procesando la imagen si está adjunta.
             const userMessage = await this._processImage(PROMPT);
             this.histories[chatID].push(userMessage);
 
             const body = {
-                model: MODEL,
+                model: this.model, // Usa el modelo seleccionado
                 messages: this.histories[chatID]
             };
 
@@ -161,7 +241,6 @@
         }
 
         attach_image({ URL }) {
-            // Simplemente almacena la URL. La conversión se hará en el momento del envío.
             this.nextImage = URL;
         }
 
