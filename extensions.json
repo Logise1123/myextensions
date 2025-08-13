@@ -16,5 +16,11 @@
     "banner":"https://raw.githubusercontent.com/Logise1123/myextensions/refs/heads/main/opentts.png",
     "name":"OpenTTS",
     "description":"Ultra High Quality TTS"
+  },
+  {
+    "code":"https://raw.githubusercontent.com/Logise1123/myextensions/refs/heads/main/myranks.js",
+    "banner":"https://raw.githubusercontent.com/Logise1123/myextensions/refs/heads/main/myranks.png",
+    "name":"MyRanks",
+    "description":"Manage and create Leaderboards!"
   }
 ]
